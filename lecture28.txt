@@ -1,0 +1,920 @@
+[root@localhost ~]# cat keystonerc_admin 
+unset OS_SERVICE_TOKEN
+    export OS_USERNAME=admin
+    export OS_PASSWORD='c66568deeae34531'
+    export OS_REGION_NAME=RegionOne
+    export OS_AUTH_URL=http://192.168.0.2:5000/v3
+    export PS1='[\u@\h \W(keystone_admin)]\$ '
+    
+export OS_PROJECT_NAME=admin
+export OS_USER_DOMAIN_NAME=Default
+export OS_PROJECT_DOMAIN_NAME=Default
+export OS_IDENTITY_API_VERSION=3
+
+[root@localhost ~(keystone_admin)]# ovs-vsctl show
+c3b4a2e4-730c-46d8-bd0d-654af86af748
+    Manager "ptcp:6640:127.0.0.1"
+        is_connected: true
+    Bridge br-tun
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-tun
+            Interface br-tun
+                type: internal
+        Port patch-int
+            Interface patch-int
+                type: patch
+                options: {peer=patch-tun}
+    Bridge br-int
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port patch-tun
+            Interface patch-tun
+                type: patch
+                options: {peer=patch-int}
+        Port int-br-ex
+            Interface int-br-ex
+                type: patch
+                options: {peer=phy-br-ex}
+        Port br-int
+            Interface br-int
+                type: internal
+    Bridge br-ex
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-ex
+            Interface br-ex
+                type: internal
+        Port "enp0s3"
+            Interface "enp0s3"
+        Port phy-br-ex
+            Interface phy-br-ex
+                type: patch
+                options: {peer=int-br-ex}
+    ovs_version: "2.12.0"
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack network agent list
++--------------------------------------+--------------------+-----------------------+-------------------+-------+-------+---------------------------+
+| ID                                   | Agent Type         | Host                  | Availability Zone | Alive | State | Binary                    |
++--------------------------------------+--------------------+-----------------------+-------------------+-------+-------+---------------------------+
+| 1d229268-df6d-429d-bd58-5381bc3b1c81 | Open vSwitch agent | localhost.localdomain | None              | :-)   | UP    | neutron-openvswitch-agent |
+| 5188cf34-0763-43c2-b81c-c7425614db42 | DHCP agent         | localhost.localdomain | nova              | :-)   | UP    | neutron-dhcp-agent        |
+| 68e531a0-d1a3-4973-a151-e9c54894d782 | Metering agent     | localhost.localdomain | None              | :-)   | UP    | neutron-metering-agent    |
+| e447333e-d41d-4a32-9b0f-e31e62bae205 | Metadata agent     | localhost.localdomain | None              | :-)   | UP    | neutron-metadata-agent    |
+| f2b61c53-edb1-411e-a1cf-38d6ae0535b6 | L3 agent           | localhost.localdomain | nova              | :-)   | UP    | neutron-l3-agent          |
++--------------------------------------+--------------------+-----------------------+-------------------+-------+-------+---------------------------+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# systemctl status neutron-server
+● neutron-server.service - OpenStack Neutron Server
+   Loaded: loaded (/usr/lib/systemd/system/neutron-server.service; enabled; vendor preset: disabled)
+   Active: active (running) since Mon 2020-02-10 20:46:10 GMT; 48min ago
+ Main PID: 1418 (/usr/bin/python)
+    Tasks: 5
+   CGroup: /system.slice/neutron-server.service
+           ├─1418 /usr/bin/python2 /usr/bin/neutron-server --config-file /usr/share/neutron/neutron-dist.conf --config-dir /usr/share/neutron/server --c...
+           ├─2730 /usr/bin/python2 /usr/bin/neutron-server --config-file /usr/share/neutron/neutron-dist.conf --config-dir /usr/share/neutron/server --c...
+           ├─2732 neutron-server: rpc worker (/usr/bin/python2 /usr/bin/neutron-server --config-file /usr/share/neutron/neutron-dist.conf --config-dir /...
+           ├─2733 neutron-server: rpc worker (/usr/bin/python2 /usr/bin/neutron-server --config-file /usr/share/neutron/neutron-dist.conf --config-dir /...
+           └─2734 neutron-server: rpc worker (/usr/bin/python2 /usr/bin/neutron-server --config-file /usr/share/neutron/neutron-dist.conf --config-dir /...
+
+Feb 10 20:44:40 localhost.localdomain systemd[1]: Starting OpenStack Neutron Server...
+Feb 10 20:45:37 localhost.localdomain neutron-server[1418]: /usr/lib/python2.7/site-packages/paste/deploy/loadwsgi.py:22: PkgResourcesDeprecation...rately.
+Feb 10 20:45:37 localhost.localdomain neutron-server[1418]: return pkg_resources.EntryPoint.parse("x=" + s).load(False)
+Feb 10 20:46:10 localhost.localdomain systemd[1]: Started OpenStack Neutron Server.
+Hint: Some lines were ellipsized, use -l to show in full.
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack network create intnet
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field                     | Value                                                                                                                                                            |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| admin_state_up            | UP                                                                                                                                                               |
+| availability_zone_hints   |                                                                                                                                                                  |
+| availability_zones        |                                                                                                                                                                  |
+| created_at                | 2020-02-10T21:36:32Z                                                                                                                                             |
+| description               |                                                                                                                                                                  |
+| dns_domain                | None                                                                                                                                                             |
+| id                        | 9b75956d-04ec-47d2-91ea-6e879a04809e                                                                                                                             |
+| ipv4_address_scope        | None                                                                                                                                                             |
+| ipv6_address_scope        | None                                                                                                                                                             |
+| is_default                | False                                                                                                                                                            |
+| is_vlan_transparent       | None                                                                                                                                                             |
+| location                  | cloud='', project.domain_id=, project.domain_name='Default', project.id='a9de525d4e154730b734662692e792db', project.name='admin', region_name='RegionOne', zone= |
+| mtu                       | 1450                                                                                                                                                             |
+| name                      | intnet                                                                                                                                                           |
+| port_security_enabled     | True                                                                                                                                                             |
+| project_id                | a9de525d4e154730b734662692e792db                                                                                                                                 |
+| provider:network_type     | vxlan                                                                                                                                                            |
+| provider:physical_network | None                                                                                                                                                             |
+| provider:segmentation_id  | 89                                                                                                                                                               |
+| qos_policy_id             | None                                                                                                                                                             |
+| revision_number           | 1                                                                                                                                                                |
+| router:external           | Internal                                                                                                                                                         |
+| segments                  | None                                                                                                                                                             |
+| shared                    | False                                                                                                                                                            |
+| status                    | ACTIVE                                                                                                                                                           |
+| subnets                   |                                                                                                                                                                  |
+| tags                      |                                                                                                                                                                  |
+| updated_at                | 2020-02-10T21:36:32Z                                                                                                                                             |
++---------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns
+(shows nothing)
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack subnet create subnet1 --subnet-range 10.5.5.0/24 --dns-nameserver 8.8.8.8 --network intnet
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field             | Value                                                                                                                                                            |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| allocation_pools  | 10.5.5.2-10.5.5.254                                                                                                                                              |
+| cidr              | 10.5.5.0/24                                                                                                                                                      |
+| created_at        | 2020-02-10T21:38:26Z                                                                                                                                             |
+| description       |                                                                                                                                                                  |
+| dns_nameservers   | 8.8.8.8                                                                                                                                                          |
+| enable_dhcp       | True                                                                                                                                                             |
+| gateway_ip        | 10.5.5.1                                                                                                                                                         |
+| host_routes       |                                                                                                                                                                  |
+| id                | 33c08ce4-c706-4921-863c-e3a837248afc                                                                                                                             |
+| ip_version        | 4                                                                                                                                                                |
+| ipv6_address_mode | None                                                                                                                                                             |
+| ipv6_ra_mode      | None                                                                                                                                                             |
+| location          | cloud='', project.domain_id=, project.domain_name='Default', project.id='a9de525d4e154730b734662692e792db', project.name='admin', region_name='RegionOne', zone= |
+| name              | subnet1                                                                                                                                                          |
+| network_id        | 9b75956d-04ec-47d2-91ea-6e879a04809e                                                                                                                             |
+| prefix_length     | None                                                                                                                                                             |
+| project_id        | a9de525d4e154730b734662692e792db                                                                                                                                 |
+| revision_number   | 0                                                                                                                                                                |
+| segment_id        | None                                                                                                                                                             |
+| service_types     |                                                                                                                                                                  |
+| subnetpool_id     | None                                                                                                                                                             |
+| tags              |                                                                                                                                                                  |
+| updated_at        | 2020-02-10T21:38:26Z                                                                                                                                             |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ovs-vsctl show
+c3b4a2e4-730c-46d8-bd0d-654af86af748
+    Manager "ptcp:6640:127.0.0.1"
+        is_connected: true
+    Bridge br-tun
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-tun
+            Interface br-tun
+                type: internal
+        Port patch-int
+            Interface patch-int
+                type: patch
+                options: {peer=patch-tun}
+    Bridge br-int
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port "tap537b3567-6b"
+            tag: 3
+            Interface "tap537b3567-6b"
+                type: internal
+        Port patch-tun
+            Interface patch-tun
+                type: patch
+                options: {peer=patch-int}
+        Port int-br-ex
+            Interface int-br-ex
+                type: patch
+                options: {peer=phy-br-ex}
+        Port br-int
+            Interface br-int
+                type: internal
+    Bridge br-ex
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-ex
+            Interface br-ex
+                type: internal
+        Port "enp0s3"
+            Interface "enp0s3"
+        Port phy-br-ex
+            Interface phy-br-ex
+                type: patch
+                options: {peer=int-br-ex}
+    ovs_version: "2.12.0"
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns
+qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e (id: 0)
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e ip address show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+17: tap537b3567-6b: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ether fa:16:3e:41:1b:60 brd ff:ff:ff:ff:ff:ff
+    inet 10.5.5.2/24 brd 10.5.5.255 scope global tap537b3567-6b
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f816:3eff:fe41:1b60/64 scope link 
+       valid_lft forever preferred_lft forever
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e ping 10.5.5.2
+PING 10.5.5.2 (10.5.5.2) 56(84) bytes of data.
+64 bytes from 10.5.5.2: icmp_seq=1 ttl=64 time=0.045 ms
+64 bytes from 10.5.5.2: icmp_seq=2 ttl=64 time=0.031 ms
+64 bytes from 10.5.5.2: icmp_seq=3 ttl=64 time=0.046 ms
+^C
+--- 10.5.5.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 1998ms
+rtt min/avg/max/mdev = 0.031/0.040/0.046/0.010 ms
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e ping 10.5.5.1
+PING 10.5.5.1 (10.5.5.1) 56(84) bytes of data.
+From 10.5.5.2 icmp_seq=1 Destination Host Unreachable
+From 10.5.5.2 icmp_seq=2 Destination Host Unreachable
+From 10.5.5.2 icmp_seq=3 Destination Host Unreachable
+^C
+--- 10.5.5.1 ping statistics ---
+5 packets transmitted, 0 received, +3 errors, 100% packet loss, time 4014ms
+pipe 3
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack router create R2
++-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field                   | Value                                                                                                                                                            |
++-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| admin_state_up          | UP                                                                                                                                                               |
+| availability_zone_hints |                                                                                                                                                                  |
+| availability_zones      |                                                                                                                                                                  |
+| created_at              | 2020-02-10T21:43:31Z                                                                                                                                             |
+| description             |                                                                                                                                                                  |
+| distributed             | False                                                                                                                                                            |
+| external_gateway_info   | null                                                                                                                                                             |
+| flavor_id               | None                                                                                                                                                             |
+| ha                      | False                                                                                                                                                            |
+| id                      | 9259d715-2143-454a-ad47-cc05bedcac0f                                                                                                                             |
+| location                | cloud='', project.domain_id=, project.domain_name='Default', project.id='a9de525d4e154730b734662692e792db', project.name='admin', region_name='RegionOne', zone= |
+| name                    | R2                                                                                                                                                               |
+| project_id              | a9de525d4e154730b734662692e792db                                                                                                                                 |
+| revision_number         | 1                                                                                                                                                                |
+| routes                  |                                                                                                                                                                  |
+| status                  | ACTIVE                                                                                                                                                           |
+| tags                    |                                                                                                                                                                  |
+| updated_at              | 2020-02-10T21:43:31Z                                                                                                                                             |
++-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ovs-vsctl show
+c3b4a2e4-730c-46d8-bd0d-654af86af748
+    Manager "ptcp:6640:127.0.0.1"
+        is_connected: true
+    Bridge br-tun
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-tun
+            Interface br-tun
+                type: internal
+        Port patch-int
+            Interface patch-int
+                type: patch
+                options: {peer=patch-tun}
+    Bridge br-int
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port "tap537b3567-6b"
+            tag: 3
+            Interface "tap537b3567-6b"
+                type: internal
+        Port patch-tun
+            Interface patch-tun
+                type: patch
+                options: {peer=patch-int}
+        Port int-br-ex
+            Interface int-br-ex
+                type: patch
+                options: {peer=phy-br-ex}
+        Port br-int
+            Interface br-int
+                type: internal
+    Bridge br-ex
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-ex
+            Interface br-ex
+                type: internal
+        Port "enp0s3"
+            Interface "enp0s3"
+        Port phy-br-ex
+            Interface phy-br-ex
+                type: patch
+                options: {peer=int-br-ex}
+    ovs_version: "2.12.0"
+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns
+qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e (id: 0)
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack router add subnet R2 subnet1
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack router show R2
++-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field                   | Value                                                                                                                                                            |
++-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| admin_state_up          | UP                                                                                                                                                               |
+| availability_zone_hints |                                                                                                                                                                  |
+| availability_zones      | nova                                                                                                                                                             |
+| created_at              | 2020-02-10T21:43:31Z                                                                                                                                             |
+| description             |                                                                                                                                                                  |
+| distributed             | False                                                                                                                                                            |
+| external_gateway_info   | null                                                                                                                                                             |
+| flavor_id               | None                                                                                                                                                             |
+| ha                      | False                                                                                                                                                            |
+| id                      | 9259d715-2143-454a-ad47-cc05bedcac0f                                                                                                                             |
+| interfaces_info         | [{"subnet_id": "33c08ce4-c706-4921-863c-e3a837248afc", "ip_address": "10.5.5.1", "port_id": "964989eb-596a-4727-ab11-0092b426acd9"}]                             |
+| location                | cloud='', project.domain_id=, project.domain_name='Default', project.id='a9de525d4e154730b734662692e792db', project.name='admin', region_name='RegionOne', zone= |
+| name                    | R2                                                                                                                                                               |
+| project_id              | a9de525d4e154730b734662692e792db                                                                                                                                 |
+| revision_number         | 2                                                                                                                                                                |
+| routes                  |                                                                                                                                                                  |
+| status                  | ACTIVE                                                                                                                                                           |
+| tags                    |                                                                                                                                                                  |
+| updated_at              | 2020-02-10T21:45:23Z                                                                                                                                             |
++-------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ovs-vsctl show
+c3b4a2e4-730c-46d8-bd0d-654af86af748
+    Manager "ptcp:6640:127.0.0.1"
+        is_connected: true
+    Bridge br-tun
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-tun
+            Interface br-tun
+                type: internal
+        Port patch-int
+            Interface patch-int
+                type: patch
+                options: {peer=patch-tun}
+    Bridge br-int
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port "qr-964989eb-59"
+            tag: 3
+            Interface "qr-964989eb-59"
+                type: internal
+        Port "tap537b3567-6b"
+            tag: 3
+            Interface "tap537b3567-6b"
+                type: internal
+        Port patch-tun
+            Interface patch-tun
+                type: patch
+                options: {peer=patch-int}
+        Port int-br-ex
+            Interface int-br-ex
+                type: patch
+                options: {peer=phy-br-ex}
+        Port br-int
+            Interface br-int
+                type: internal
+    Bridge br-ex
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-ex
+            Interface br-ex
+                type: internal
+        Port "enp0s3"
+            Interface "enp0s3"
+        Port phy-br-ex
+            Interface phy-br-ex
+                type: patch
+                options: {peer=int-br-ex}
+    ovs_version: "2.12.0"
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns
+qrouter-9259d715-2143-454a-ad47-cc05bedcac0f (id: 1)
+qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e (id: 0)
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qrouter-9259d715-2143-454a-ad47-cc05bedcac0f ip address show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+18: qr-964989eb-59: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/ether fa:16:3e:73:2a:f1 brd ff:ff:ff:ff:ff:ff
+    inet 10.5.5.1/24 brd 10.5.5.255 scope global qr-964989eb-59
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f816:3eff:fe73:2af1/64 scope link 
+       valid_lft forever preferred_lft forever
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qrouter-9259d715-2143-454a-ad47-cc05bedcac0f ping 10.5.5.1
+PING 10.5.5.1 (10.5.5.1) 56(84) bytes of data.
+64 bytes from 10.5.5.1: icmp_seq=1 ttl=64 time=0.047 ms
+64 bytes from 10.5.5.1: icmp_seq=2 ttl=64 time=0.057 ms
+64 bytes from 10.5.5.1: icmp_seq=3 ttl=64 time=0.047 ms
+^C
+--- 10.5.5.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 1998ms
+rtt min/avg/max/mdev = 0.047/0.050/0.057/0.007 ms
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# neutron router-gateway-set R2 external_network
+neutron CLI is deprecated and will be removed in the future. Use openstack CLI instead.
+Set gateway for router R2
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ovs-vsctl show
+c3b4a2e4-730c-46d8-bd0d-654af86af748
+    Manager "ptcp:6640:127.0.0.1"
+        is_connected: true
+    Bridge br-tun
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-tun
+            Interface br-tun
+                type: internal
+        Port patch-int
+            Interface patch-int
+                type: patch
+                options: {peer=patch-tun}
+    Bridge br-int
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port "qr-964989eb-59"
+            tag: 3
+            Interface "qr-964989eb-59"
+                type: internal
+        Port "tap537b3567-6b"
+            tag: 3
+            Interface "tap537b3567-6b"
+                type: internal
+        Port "qg-654f9177-6f"
+            tag: 4
+            Interface "qg-654f9177-6f"
+                type: internal
+        Port patch-tun
+            Interface patch-tun
+                type: patch
+                options: {peer=patch-int}
+        Port int-br-ex
+            Interface int-br-ex
+                type: patch
+                options: {peer=phy-br-ex}
+        Port br-int
+            Interface br-int
+                type: internal
+    Bridge br-ex
+        Controller "tcp:127.0.0.1:6633"
+            is_connected: true
+        fail_mode: secure
+        datapath_type: system
+        Port br-ex
+            Interface br-ex
+                type: internal
+        Port "enp0s3"
+            Interface "enp0s3"
+        Port phy-br-ex
+            Interface phy-br-ex
+                type: patch
+                options: {peer=int-br-ex}
+    ovs_version: "2.12.0"
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns
+qrouter-9259d715-2143-454a-ad47-cc05bedcac0f (id: 1)
+qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e (id: 0)
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack network list
++--------------------------------------+------------------+--------------------------------------+
+| ID                                   | Name             | Subnets                              |
++--------------------------------------+------------------+--------------------------------------+
+| 7680c39e-85c9-4a8e-b49f-423d32852c45 | external_network | 550b908c-fa9b-4aa1-8e85-753dfb768c21 |
+| 9b75956d-04ec-47d2-91ea-6e879a04809e | intnet           | 33c08ce4-c706-4921-863c-e3a837248afc |
++--------------------------------------+------------------+--------------------------------------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack image list
++--------------------------------------+--------+--------+
+| ID                                   | Name   | Status |
++--------------------------------------+--------+--------+
+| fc087c04-997a-4967-b87a-366f3f7248d2 | cirros | active |
++--------------------------------------+--------+--------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack flavor list
++----+-----------+-------+------+-----------+-------+-----------+
+| ID | Name      |   RAM | Disk | Ephemeral | VCPUs | Is Public |
++----+-----------+-------+------+-----------+-------+-----------+
+| 1  | m1.tiny   |   512 |    1 |         0 |     1 | True      |
+| 2  | m1.small  |  2048 |   20 |         0 |     1 | True      |
+| 3  | m1.medium |  4096 |   40 |         0 |     2 | True      |
+| 4  | m1.large  |  8192 |   80 |         0 |     4 | True      |
+| 5  | m1.xlarge | 16384 |  160 |         0 |     8 | True      |
++----+-----------+-------+------+-----------+-------+-----------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack server create --image cirros --flavor 1 --nic net-id=9b75956d-04ec-47d2-91ea-6e879a04809e inst1
++-------------------------------------+-----------------------------------------------+
+| Field                               | Value                                         |
++-------------------------------------+-----------------------------------------------+
+| OS-DCF:diskConfig                   | MANUAL                                        |
+| OS-EXT-AZ:availability_zone         |                                               |
+| OS-EXT-SRV-ATTR:host                | None                                          |
+| OS-EXT-SRV-ATTR:hypervisor_hostname | None                                          |
+| OS-EXT-SRV-ATTR:instance_name       |                                               |
+| OS-EXT-STS:power_state              | NOSTATE                                       |
+| OS-EXT-STS:task_state               | scheduling                                    |
+| OS-EXT-STS:vm_state                 | building                                      |
+| OS-SRV-USG:launched_at              | None                                          |
+| OS-SRV-USG:terminated_at            | None                                          |
+| accessIPv4                          |                                               |
+| accessIPv6                          |                                               |
+| addresses                           |                                               |
+| adminPass                           | pq6ksDL3BdAW                                  |
+| config_drive                        |                                               |
+| created                             | 2020-02-10T21:53:56Z                          |
+| flavor                              | m1.tiny (1)                                   |
+| hostId                              |                                               |
+| id                                  | aba285be-4d2c-49c9-951e-e53b56f1584f          |
+| image                               | cirros (fc087c04-997a-4967-b87a-366f3f7248d2) |
+| key_name                            | None                                          |
+| name                                | inst1                                         |
+| progress                            | 0                                             |
+| project_id                          | a9de525d4e154730b734662692e792db              |
+| properties                          |                                               |
+| security_groups                     | name='default'                                |
+| status                              | BUILD                                         |
+| updated                             | 2020-02-10T21:53:57Z                          |
+| user_id                             | 6d857f509cf7492b9378e93f21427418              |
+| volumes_attached                    |                                               |
++-------------------------------------+-----------------------------------------------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack server create --image cirros --flavor 1 --nic net-id=9b75956d-04ec-47d2-91ea-6e879a04809e inst1
++-------------------------------------+-----------------------------------------------+
+| Field                               | Value                                         |
++-------------------------------------+-----------------------------------------------+
+| OS-DCF:diskConfig                   | MANUAL                                        |
+| OS-EXT-AZ:availability_zone         |                                               |
+| OS-EXT-SRV-ATTR:host                | None                                          |
+| OS-EXT-SRV-ATTR:hypervisor_hostname | None                                          |
+| OS-EXT-SRV-ATTR:instance_name       |                                               |
+| OS-EXT-STS:power_state              | NOSTATE                                       |
+| OS-EXT-STS:task_state               | scheduling                                    |
+| OS-EXT-STS:vm_state                 | building                                      |
+| OS-SRV-USG:launched_at              | None                                          |
+| OS-SRV-USG:terminated_at            | None                                          |
+| accessIPv4                          |                                               |
+| accessIPv6                          |                                               |
+| addresses                           |                                               |
+| adminPass                           | iCTbUhrm3rh7                                  |
+| config_drive                        |                                               |
+| created                             | 2020-02-10T22:05:38Z                          |
+| flavor                              | m1.tiny (1)                                   |
+| hostId                              |                                               |
+| id                                  | 52fe51a1-8618-411f-afec-eb3b94abfebd          |
+| image                               | cirros (fc087c04-997a-4967-b87a-366f3f7248d2) |
+| key_name                            | None                                          |
+| name                                | inst1                                         |
+| progress                            | 0                                             |
+| project_id                          | a9de525d4e154730b734662692e792db              |
+| properties                          |                                               |
+| security_groups                     | name='default'                                |
+| status                              | BUILD                                         |
+| updated                             | 2020-02-10T22:05:38Z                          |
+| user_id                             | 6d857f509cf7492b9378e93f21427418              |
+| volumes_attached                    |                                               |
++-------------------------------------+-----------------------------------------------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack server show inst1
++-------------------------------------+----------------------------------------------------------+
+| Field                               | Value                                                    |
++-------------------------------------+----------------------------------------------------------+
+| OS-DCF:diskConfig                   | MANUAL                                                   |
+| OS-EXT-AZ:availability_zone         | nova                                                     |
+| OS-EXT-SRV-ATTR:host                | localhost.localdomain                                    |
+| OS-EXT-SRV-ATTR:hypervisor_hostname | localhost.localdomain                                    |
+| OS-EXT-SRV-ATTR:instance_name       | instance-0000000b                                        |
+| OS-EXT-STS:power_state              | Running                                                  |
+| OS-EXT-STS:task_state               | None                                                     |
+| OS-EXT-STS:vm_state                 | active                                                   |
+| OS-SRV-USG:launched_at              | 2020-02-10T22:06:06.000000                               |
+| OS-SRV-USG:terminated_at            | None                                                     |
+| accessIPv4                          |                                                          |
+| accessIPv6                          |                                                          |
+| addresses                           | intnet=10.5.5.149                                        |
+| config_drive                        |                                                          |
+| created                             | 2020-02-10T22:05:38Z                                     |
+| flavor                              | m1.tiny (1)                                              |
+| hostId                              | e93441280f4b034f85896381e2068692fb7e9a5e475bfcf65b799347 |
+| id                                  | 52fe51a1-8618-411f-afec-eb3b94abfebd                     |
+| image                               | cirros (fc087c04-997a-4967-b87a-366f3f7248d2)            |
+| key_name                            | None                                                     |
+| name                                | inst1                                                    |
+| progress                            | 0                                                        |
+| project_id                          | a9de525d4e154730b734662692e792db                         |
+| properties                          |                                                          |
+| security_groups                     | name='default'                                           |
+| status                              | ACTIVE                                                   |
+| updated                             | 2020-02-10T22:06:06Z                                     |
+| user_id                             | 6d857f509cf7492b9378e93f21427418                         |
+| volumes_attached                    |                                                          |
++-------------------------------------+----------------------------------------------------------+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns
+qrouter-9259d715-2143-454a-ad47-cc05bedcac0f (id: 1)
+qdhcp-9b75956d-04ec-47d2-91ea-6e879a04809e (id: 0)
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qrouter-9259d715-2143-454a-ad47-cc05bedcac0f ping 10.5.5.149
+PING 10.5.5.149 (10.5.5.149) 56(84) bytes of data.
+From 10.5.5.1 icmp_seq=1 Destination Host Unreachable
+From 10.5.5.1 icmp_seq=2 Destination Host Unreachable
+From 10.5.5.1 icmp_seq=3 Destination Host Unreachable
+From 10.5.5.1 icmp_seq=4 Destination Host Unreachable
+^C
+--- 10.5.5.149 ping statistics ---
+5 packets transmitted, 0 received, +4 errors, 100% packet loss, time 4002ms
+pipe 4
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack security group list
++--------------------------------------+---------+------------------------+----------------------------------+------+
+| ID                                   | Name    | Description            | Project                          | Tags |
++--------------------------------------+---------+------------------------+----------------------------------+------+
+| 096f89ec-f8a3-4700-9f46-795380fbd4b6 | default | Default security group | a9de525d4e154730b734662692e792db | []   |
+| 3f307f3c-06c1-4bea-a89d-137451459e60 | default | Default security group | ed6fcd50b082497a9fe28ad383be7c6d | []   |
+| 76206442-2e7d-48d5-8d36-f9158faf0b4f | default | Default security group | dbc33db6ff5447dca75623cc9a39e65b | []   |
+| 91a42112-515a-4fcc-a196-ff660cf49672 | default | Default security group | 74cac0ebc53940c2ad9f8bc4b735db96 | []   |
+| 9c3c634d-8344-4d5b-b00f-896142351c54 | default | Default security group |                                  | []   |
+| e5b17ec8-b0fe-4bf4-82e3-41e5bc2e53f4 | default | Default security group | af2d67fa47464acb816072afdade1454 | []   |
++--------------------------------------+---------+------------------------+----------------------------------+------+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack project list
++----------------------------------+----------+
+| ID                               | Name     |
++----------------------------------+----------+
+| a9de525d4e154730b734662692e792db | admin    |
+| af2d67fa47464acb816072afdade1454 | services |
++----------------------------------+----------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack security group rule create --remote-ip 0.0.0.0/0 --protocol icmp --ingress 096f89ec-f8a3-4700-9f46-795380fbd4b6
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field             | Value                                                                                                                                                            |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| created_at        | 2020-02-10T22:13:23Z                                                                                                                                             |
+| description       |                                                                                                                                                                  |
+| direction         | ingress                                                                                                                                                          |
+| ether_type        | IPv4                                                                                                                                                             |
+| id                | 5549fa83-225e-4b94-b6fc-acd91656aa31                                                                                                                             |
+| location          | cloud='', project.domain_id=, project.domain_name='Default', project.id='a9de525d4e154730b734662692e792db', project.name='admin', region_name='RegionOne', zone= |
+| name              | None                                                                                                                                                             |
+| port_range_max    | None                                                                                                                                                             |
+| port_range_min    | None                                                                                                                                                             |
+| project_id        | a9de525d4e154730b734662692e792db                                                                                                                                 |
+| protocol          | icmp                                                                                                                                                             |
+| remote_group_id   | None                                                                                                                                                             |
+| remote_ip_prefix  | 0.0.0.0/0                                                                                                                                                        |
+| revision_number   | 0                                                                                                                                                                |
+| security_group_id | 096f89ec-f8a3-4700-9f46-795380fbd4b6                                                                                                                             |
+| tags              | []                                                                                                                                                               |
+| updated_at        | 2020-02-10T22:13:23Z                                                                                                                                             |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qrouter-9259d715-2143-454a-ad47-cc05bedcac0f ping 10.5.5.149
+PING 10.5.5.149 (10.5.5.149) 56(84) bytes of data.
+From 10.5.5.1 icmp_seq=1 Destination Host Unreachable
+From 10.5.5.1 icmp_seq=2 Destination Host Unreachable
+From 10.5.5.1 icmp_seq=3 Destination Host Unreachable
+^C
+--- 10.5.5.149 ping statistics ---
+6 packets transmitted, 0 received, +3 errors, 100% packet loss, time 5019ms
+pipe 4
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# openstack security group rule create --remote-ip 0.0.0.0/0 --dst-port 22 --protocol tcp --ingress 096f89ec-f8a3-4700-9f46-795380fbd4b6
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field             | Value                                                                                                                                                            |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| created_at        | 2020-02-10T22:15:34Z                                                                                                                                             |
+| description       |                                                                                                                                                                  |
+| direction         | ingress                                                                                                                                                          |
+| ether_type        | IPv4                                                                                                                                                             |
+| id                | 449d1bb0-4366-4101-84b6-d37ee40e333b                                                                                                                             |
+| location          | cloud='', project.domain_id=, project.domain_name='Default', project.id='a9de525d4e154730b734662692e792db', project.name='admin', region_name='RegionOne', zone= |
+| name              | None                                                                                                                                                             |
+| port_range_max    | 22                                                                                                                                                               |
+| port_range_min    | 22                                                                                                                                                               |
+| project_id        | a9de525d4e154730b734662692e792db                                                                                                                                 |
+| protocol          | tcp                                                                                                                                                              |
+| remote_group_id   | None                                                                                                                                                             |
+| remote_ip_prefix  | 0.0.0.0/0                                                                                                                                                        |
+| revision_number   | 0                                                                                                                                                                |
+| security_group_id | 096f89ec-f8a3-4700-9f46-795380fbd4b6                                                                                                                             |
+| tags              | []                                                                                                                                                               |
+| updated_at        | 2020-02-10T22:15:34Z                                                                                                                                             |
++-------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qrouter-9259d715-2143-454a-ad47-cc05bedcac0f ping 10.5.5.149
+PING 10.5.5.149 (10.5.5.149) 56(84) bytes of data.
+^C
+--- 10.5.5.149 ping statistics ---
+3 packets transmitted, 0 received, 100% packet loss, time 2010ms
+
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qrouter-9259d715-2143-454a-ad47-cc05bedcac0f ssh cirros@10.2.2.149
+ssh: connect to host 10.2.2.149 port 22: No route to host
+
+
+
+
+
+[root@localhost ~(keystone_admin)]# ip netns exec qrouter-9259d715-2143-454a-ad47-cc05bedcac0f ip route
+default via 192.168.0.1 dev qg-654f9177-6f proto static 
+10.5.5.0/24 dev qr-964989eb-59 proto kernel scope link src 10.5.5.1 
+192.168.0.0/24 dev qg-654f9177-6f proto kernel scope link src 192.168.0.107 
+
+
+
+
+
